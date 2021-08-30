@@ -13,13 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: tools
-      run: mkdir gitdir && cd gitdir && git clone --depth=1 https://github.com/raspberrypi/tools && cd ..
     - name: init
-      run: sudo apt-get install lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
+      run: sudo apt-get install gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
     - name: prepare
-      run: export PATH=gitdir/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/:$PATH && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- oldconfig && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- prepare
+      run: make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- oldconfig && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- prepare
     - name: make misc
-      run: export PATH=gitdir/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/:$PATH && export CURPWD=$PWD && cd drivers/misc/ && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -C $CURPWD M=$PWD
+      run: export CURPWD=$PWD && cd drivers/misc/ && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -C $CURPWD M=$PWD
     - name: make nand
-      run: export PATH=gitdir/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/:$PATH && export CURPWD=$PWD && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make KBUILD_EXTRA_SYMBOLS='$CURPWD/lib/Module.symvers' -C $CURPWD M=$PWD modules
+      run: export CURPWD=$PWD && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make KBUILD_EXTRA_SYMBOLS='$CURPWD/lib/Module.symvers' -C $CURPWD M=$PWD modules
