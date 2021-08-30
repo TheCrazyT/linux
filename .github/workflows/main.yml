@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: init
-      run: apt-get install ncurses-dev make gcc-arm-linux-gnueabi
+      run: sudo apt-get install ncurses-dev make gcc-arm-linux-gnueabi
     - name: make misc
       run: export CURPWD=$PWD && cd drivers/misc/ && make -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- make -C $CURPWD M=$PWD
     - name: make nand
