@@ -13,8 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: tools
+      run: git clone https://github.com/raspberrypi/tools
+    - name: env
+      run: export PATH=tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/:$PATH
     - name: init
-      run: sudo apt-get install ncurses-dev make gcc-arm-linux-gnueabi && sudo ln -s include/asm-generic include/asm
+      run: sudo apt-get install lib32z1 lib32ncurses5 lib32stdc++6 lib32z1 lib32z1-dev
     - name: prepare
       run: make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- oldconfig && make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- prepare
     - name: make misc
