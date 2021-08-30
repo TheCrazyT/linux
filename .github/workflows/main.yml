@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: init
-      run: sudo apt-get install ncurses-dev make gcc-arm-linux-gnueabi && sudo ln -s /usr/include/asm-generic /usr/include/asm
+      run: sudo apt-get install ncurses-dev make gcc-arm-linux-gnueabi && sudo ln -s include/asm-generic include/asm
     - name: prepare
       run: make oldconfig && make prepare
     - name: make misc
