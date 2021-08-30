@@ -16,8 +16,8 @@ jobs:
     - name: init
       run: sudo apt-get install ncurses-dev make gcc-arm-linux-gnueabi && sudo ln -s include/asm-generic include/asm
     - name: prepare
-      run: make oldconfig && make prepare
+      run: make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- oldconfig && make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- prepare
     - name: make misc
-      run: export CURPWD=$PWD && cd drivers/misc/ && make -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- make -C $CURPWD M=$PWD
+      run: export CURPWD=$PWD && cd drivers/misc/ && make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- make -C $CURPWD M=$PWD
     - name: make nand
-      run: export CURPWD=$PWD && ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- make -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- make KBUILD_EXTRA_SYMBOLS='$CURPWD/lib/Module.symvers' -C $CURPWD M=$PWD modules
+      run: export CURPWD=$PWD && make ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- make KBUILD_EXTRA_SYMBOLS='$CURPWD/lib/Module.symvers' -C $CURPWD M=$PWD modules
