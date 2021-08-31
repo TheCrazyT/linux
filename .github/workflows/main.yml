@@ -27,3 +27,9 @@ jobs:
       run: export CURPWD=$PWD && cd drivers/misc/ && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -C $CURPWD M=$PWD
     - name: make nand
       run: export CURPWD=$PWD && cd drivers/mtd/nand && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make KBUILD_EXTRA_SYMBOLS='${CURPWD}/Module.symvers' -C $CURPWD M=$PWD modules
+    - name: find ko
+      run: find -name "*.ko"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: **/*.ko
