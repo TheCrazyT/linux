@@ -26,4 +26,4 @@ jobs:
     - name: make misc
       run: export CURPWD=$PWD && cd drivers/misc/ && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -C $CURPWD M=$PWD
     - name: make nand
-      run: export CURPWD=$PWD && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make KBUILD_EXTRA_SYMBOLS='$CURPWD/lib/Module.symvers' -C $CURPWD M=$PWD modules
+      run: export CURPWD=$PWD && cd drivers/mtd/nand && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make KBUILD_EXTRA_SYMBOLS='$CURPWD/lib/Module.symvers' -C $CURPWD M=$PWD modules
