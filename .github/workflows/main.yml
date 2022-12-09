@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: init
-      run: sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
+      run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
     - name: module.lds
       run: head -n 26 scripts/module.lds.S > scripts/module.lds
     - name: config
