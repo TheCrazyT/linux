@@ -1,0 +1,35 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ raspberrypi-kernel_1.20221104-nand ]
+  pull_request:
+    branches: [ raspberrypi-kernel_1.20221104-nand ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: init
+      run: sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
+    - name: module.lds
+      run: tail -n -56 scripts/module.lds.S|head -n -34 > scripts/module.lds && echo "}" >> scripts/module.lds
+    - name: config
+      run: wget https://gist.githubusercontent.com/TheCrazyT/febb82dd125d76a4d52249c59e59e457/raw/7d837800c9115dd3f4aa790ae41183bfa9abbc07/.config
+    - name: Module.symvers
+      run: make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- modules
+    - name: prepare
+      run: make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- oldconfig && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- prepare
+    - name: make misc
+      run: export CURPWD=$PWD && cd drivers/misc/ && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -C $CURPWD M=$PWD
+    - name: make nand
+      run: export CURPWD=$PWD && cd drivers/mtd/nand && make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make KBUILD_EXTRA_SYMBOLS='${CURPWD}/Module.symvers' -C $CURPWD M=$PWD modules
+    - name: find ko
+      run: find -name "*.ko"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: drivers/**/*.ko
