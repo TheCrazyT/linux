@@ -1,4 +1,6 @@
-![example workflow](https://github.com/TheCrazyT/linux/actions/workflows/main.yml/badge.svg)
+Branch in status: work in progress!
+
+![build workflow](https://github.com/TheCrazyT/linux/actions/workflows/main.yml/badge.svg?branch=raspberrypi-kernel_1.20221104-nand)
 
 Linux kernel
 ============
