@@ -17,12 +17,12 @@ jobs:
       env: 
         RCLONE_CONF_PCLOUD_B64: ${{ secrets.RCLONE_CONF_PCLOUD }}
       run: mkdir -p ~/.config/rclone && echo $RCLONE_CONF_PCLOUD_B64 | base64 --decode > ~/.config/rclone/rclone.conf
-    - name: init
-      run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
     - name: rclone install
       run: curl https://rclone.org/install.sh | sudo bash
     - name: rclone mount
       run: whoami && DEFAULT_USER=$(whoami) && sudo mkdir /rclone_mnt && sudo chown -R $DEFAULT_USER:users /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
+    - name: init
+      run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
     - name: module.lds
       run: tail -n -56 scripts/module.lds.S|head -n -34 > scripts/module.lds && echo "}" >> scripts/module.lds
     - name: config
