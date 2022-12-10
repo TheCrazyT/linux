@@ -40,7 +40,7 @@ jobs:
     - name: find ko
       run: find -name "*.ko"
     - name: deploy to rclone
-      run: rsync -r -l . /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand
+      run: rsync -r -l -c . /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand
     - uses: actions/upload-artifact@v2
       with:
         name: my-artifact
