@@ -19,6 +19,8 @@ jobs:
       run: mkdir -p ~/.config/rclone && echo $RCLONE_CONF_PCLOUD_B64 | base64 --decode > ~/.config/rclone/rclone.conf
     - name: rclone install
       run: curl https://rclone.org/install.sh | sudo bash
+    - name: show rclone config
+      run: echo q|rclone config
     - name: rclone mount
       run: whoami && DEFAULT_USER=$(whoami) && sudo mkdir /rclone_mnt && sudo chown -R $DEFAULT_USER:users /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
     - name: init
