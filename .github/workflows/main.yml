@@ -13,6 +13,8 @@ jobs:
     environment: RCLONE
     steps:
     - uses: actions/checkout@v2
+    - name: rsync version
+      run: rsync --version
     - name: rclone config
       env: 
         RCLONE_CONF_PCLOUD_B64: ${{ secrets.RCLONE_CONF_PCLOUD }}
@@ -25,8 +27,6 @@ jobs:
       run: whoami && DEFAULT_USER=$(whoami) && sudo mkdir /rclone_mnt && sudo chown -R $DEFAULT_USER:users /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
     - name: init
       run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
-    - name: module.lds
-      run: tail -n -56 scripts/module.lds.S|head -n -34 > scripts/module.lds && echo "}" >> scripts/module.lds
     - name: config
       run: cp example.config .config
     - name: Module.symvers
@@ -40,7 +40,7 @@ jobs:
     - name: find ko
       run: find -name "*.ko"
     - name: deploy to rclone
-      run: cp -R . /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand
+      run: rsync -r -l . /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand
     - uses: actions/upload-artifact@v2
       with:
         name: my-artifact
