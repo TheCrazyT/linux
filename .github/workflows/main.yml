@@ -39,8 +39,12 @@ jobs:
       run: export CURPWD=$PWD && cd drivers/mtd/nand && make -j 2 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -j 2 KBUILD_EXTRA_SYMBOLS='${CURPWD}/Module.symvers' -C $CURPWD M=$PWD modules
     - name: find ko
       run: find -name "*.ko"
+    - name: checksums
+      run: find -type f -exec md5sum {} \; > /tmp/new_checkums.txt
     - name: deploy to rclone
       run: rsync -r -l -c . /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand
+    - name: update checksums
+      run: cp /tmp/new_checksums.txt /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand/checksums.txt && cp /tmp/new_checksums.txt '/rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand/checksums_'$(date +%s)'.txt'
     - uses: actions/upload-artifact@v2
       with:
         name: my-artifact
