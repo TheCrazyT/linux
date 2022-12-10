@@ -16,7 +16,8 @@ jobs:
     - name: init
       run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
     - name: rclone config
-      env: RCLONE_CONF_PCLOUD_B64: ${{ secrets.RCLONE_CONF_PCLOUD }}
+      env: 
+        RCLONE_CONF_PCLOUD_B64: ${{ secrets.RCLONE_CONF_PCLOUD }}
       run: mkdir -p /root/.config/rclone && echo $RCLONE_CONF_PCLOUD_B64 | base64 --decode > /root/.config/rclone/rclone.conf
     - name: rclone install
       run: curl https://rclone.org/install.sh | sudo bash
