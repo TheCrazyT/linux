@@ -22,7 +22,7 @@ jobs:
     - name: rclone install
       run: curl https://rclone.org/install.sh | sudo bash
     - name: rclone mount
-      run: mkdir /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
+      run: whoami && DEFAULT_USER=$(whoami) && sudo mkdir /rclone_mnt && sudo chown -R $DEFAULT_USER:users /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
     - name: module.lds
       run: tail -n -56 scripts/module.lds.S|head -n -34 > scripts/module.lds && echo "}" >> scripts/module.lds
     - name: config
