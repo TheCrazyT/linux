@@ -47,7 +47,7 @@ jobs:
           vmlinux
           drivers/**/*.ko
     - name: checksums
-      run: find -type f -exec md5sum {} \; > /tmp/new_checkums.txt
+      run: find -type f -exec md5sum {} \; > /tmp/new_checksums.txt
     - name: deploy to rclone
       run: rclone copy -l -c . pcloud:/build_images/raspberrypi-kernel_1.20221104-nand
     - name: update checksums
