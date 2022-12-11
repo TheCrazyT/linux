@@ -63,6 +63,7 @@ struct bcm2835_smi_nand_host {
 };
 struct bcm2835_smi_controller smic;
 
+
 /****************************************************************************
 *
 *   NAND functionality implementation
@@ -194,15 +195,15 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	smi_settings = bcm2835_smi_get_settings_from_regs(smi_inst);
 
 	smi_settings->data_width = SMI_WIDTH_8BIT;
-	smi_settings->read_setup_time = 2;
-	smi_settings->read_hold_time = 1;
-	smi_settings->read_pace_time = 1;
-	smi_settings->read_strobe_time = 3;
+	smi_settings->read_setup_time = 32;
+	smi_settings->read_hold_time = 32;
+	smi_settings->read_pace_time = 64;
+	smi_settings->read_strobe_time = 64;
 
-	smi_settings->write_setup_time = 2;
-	smi_settings->write_hold_time = 1;
-	smi_settings->write_pace_time = 1;
-	smi_settings->write_strobe_time = 3;
+	smi_settings->write_setup_time = 32;
+	smi_settings->write_hold_time = 16;
+	smi_settings->write_pace_time = 16;
+	smi_settings->write_strobe_time = 11;
 
 	dev_warn(dev,"before bcm2835_smi_set_regs_from_settings");
 	bcm2835_smi_set_regs_from_settings(smi_inst);
@@ -235,7 +236,7 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	}
 	
 	/* 20 us command delay time... */
-	this->legacy.chip_delay = 20;
+	this->legacy.chip_delay = 40;
 
 	this->priv = host;
 	this->legacy.cmd_ctrl = bcm2835_smi_nand_cmd_ctrl;
@@ -245,7 +246,7 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	this->legacy.read_buf = bcm2835_smi_nand_read_buf;
 	
 	this->ecc.engine_type = NAND_ECC_ENGINE_TYPE_SOFT;
-	this->ecc.algo = NAND_ECC_ALGO_BCH;
+	this->ecc.algo = NAND_ECC_ALGO_HAMMING;
 
 	/* Should never be accessed directly: */
 
