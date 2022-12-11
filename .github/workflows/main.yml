@@ -12,7 +12,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     environment: RCLONE
     steps:
@@ -55,4 +54,3 @@ jobs:
       run: rclone copy . pcloud:/build_images/raspberrypi-kernel_1.20221104-nand
     - name: update checksums
       run: rclone copy /tmp/new_checksums.txt pcloud:/build_images/raspberrypi-kernel_1.20221104-nand/checksums.txt && rclone copy /tmp/new_checksums.txt 'pcloud:/build_images/raspberrypi-kernel_1.20221104-nand/checksums_'$(date +%s)'.txt'
-
