@@ -26,8 +26,6 @@ jobs:
       run: echo q|rclone config && ls -lah ~/.config/rclone
     - name: rclone version
       run: rclone --version
-   - name: rclone mount
-      run: whoami && DEFAULT_USER=$(whoami) && sudo mkdir /rclone_mnt && sudo chown -R $DEFAULT_USER:users /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
     - name: init
       run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
     - name: config
