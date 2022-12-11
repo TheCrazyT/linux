@@ -47,12 +47,21 @@
 #define DEVICE_NAME "bcm2835-smi-nand"
 #define DRIVER_NAME "smi-nand-bcm2835"
 
+struct bcm2835_smi_controller {
+	struct platform_device *ofdev;
+	void __iomem *base;
+	struct nand_chip chip;
+	int chip_select;
+	struct nand_controller smi_control;
+	struct mtd_info *mtd;
+};
 struct bcm2835_smi_nand_host {
 	struct bcm2835_smi_instance *smi_inst;
 	struct nand_chip nand_chip;
 	struct mtd_info mtd;
 	struct device *dev;
 };
+struct bcm2835_smi_controller smic;
 
 /****************************************************************************
 *
@@ -64,7 +73,8 @@ struct bcm2835_smi_nand_host {
 #define SMI_NAND_ALE_PIN 0x02
 
 static inline struct bcm2835_smi_instance* fetch_inst(struct nand_chip *chip) {
-	struct mtd_info *mtd = nand_to_mtd(chip);
+	struct bcm2835_smi_controller *psmic = nand_get_controller_data(chip);
+	struct mtd_info *mtd = psmic->mtd;
 	struct bcm2835_smi_nand_host *host;
 	struct bcm2835_smi_instance *inst;
 	if(!mtd) {
@@ -119,9 +129,7 @@ static inline uint8_t bcm2835_smi_nand_read_byte(struct nand_chip *chip)
 static inline void bcm2835_smi_nand_write_byte(struct nand_chip *chip,
 					       uint8_t byte)
 {
-	struct mtd_info *mtd = nand_to_mtd(chip);
-	struct bcm2835_smi_nand_host *host = dev_get_drvdata(mtd->dev.parent);
-	struct bcm2835_smi_instance *inst = host->smi_inst;
+	struct bcm2835_smi_instance *inst = fetch_inst(chip);
 
 	bcm2835_smi_write_buf(inst, &byte, 1);
 }
@@ -160,6 +168,11 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 
 	pr_warn("bcm2835_smi_nand_probe");
 	
+	if (!dev) {
+		pr_crit("dev not set!");
+		return -EINVAL;
+	}
+	
 	if (!node) {
 		dev_err(dev, "No device tree node supplied!");
 		return -EINVAL;
@@ -167,6 +180,7 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 
 	smi_node = of_parse_phandle(node, "smi_handle", 0);
 
+	dev_warn(dev,"before bcm2835_smi_get");
 	/* Request use of SMI peripheral: */
 	smi_inst = bcm2835_smi_get(smi_node);
 
@@ -176,7 +190,7 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	}
 
 	/* Set SMI timing and bus width */
-
+	pr_warn("before bcm2835_smi_get_settings_from_regs");
 	smi_settings = bcm2835_smi_get_settings_from_regs(smi_inst);
 
 	smi_settings->data_width = SMI_WIDTH_8BIT;
@@ -190,8 +204,10 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	smi_settings->write_pace_time = 1;
 	smi_settings->write_strobe_time = 3;
 
+	dev_warn(dev,"before bcm2835_smi_set_regs_from_settings");
 	bcm2835_smi_set_regs_from_settings(smi_inst);
 
+	dev_warn(dev,"before devm_kzalloc");
 	host = devm_kzalloc(dev, sizeof(struct bcm2835_smi_nand_host),
 		GFP_KERNEL);
 	if (!host)
@@ -200,17 +216,24 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	host->dev = dev;
 	host->smi_inst = smi_inst;
 
+	dev_warn(dev,"before platform_set_drvdata");
 	platform_set_drvdata(pdev, host);
 
 	/* Link the structures together */
 
 	this = &host->nand_chip;
+	
 	mtd = &host->mtd;
 	mtd->priv = this;
 	mtd->owner = THIS_MODULE;
 	mtd->dev.parent = dev;
 	mtd->name = DRIVER_NAME;
 
+	if(!mtd->dev.parent){
+		dev_err(dev, "mtd->dev.parent failed! #1");
+		return -EINVAL;
+	}
+	
 	/* 20 us command delay time... */
 	this->legacy.chip_delay = 20;
 
@@ -229,30 +252,44 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	this->legacy.IO_ADDR_R = (void *)0xdeadbeef;
 	this->legacy.IO_ADDR_W = (void *)0xdeadbeef;
 	
+	dev_warn(dev,"additional prechecks #1");
+	dev_warn(dev,"mtd before: %p",mtd);
 	//additional prechecks
-	mtd = nand_to_mtd(this);
+	/*mtd = nand_to_mtd(this);
+	dev_warn(dev,"mtd after: %p",mtd);
 	if(!mtd) {
 		dev_err(dev, "nand_to_mtd failed!");
 		return -EINVAL;
+	}*/
+	dev_warn(dev,"additional prechecks #2");
+	if(!mtd->dev.parent){
+		dev_err(dev, "mtd->dev.parent failed! #2");
+		return -EINVAL;
 	}
+	dev_warn(dev,"additional prechecks #3");
 	host = dev_get_drvdata(mtd->dev.parent);
+	dev_warn(dev,"additional prechecks #4");
 	if(!host) {
 		dev_err(dev, "dev_get_drvdata failed!");
 		return -EINVAL;
 	}
+	dev_warn(dev,"additional prechecks #5");
 	if(!host->smi_inst) {
 		dev_err(dev, "host->smi_inst is null!");
 		return -EINVAL;
 	}
 	
-	/* Scan to find the device and get the page size */
+	dev_warn(dev,"before nand_set_controller_data");
+	nand_set_controller_data(this, &smic);
+	smic.mtd = mtd;
 
-	pr_warn("before nand_scan");
+	/* Scan to find the device and get the page size */
+	dev_warn(dev,"before nand_scan");
 
 	if (nand_scan(this, 1))
 		return -ENXIO;
 
-	pr_warn("nand id: %02x %02x %02x %02x",
+	dev_warn(dev,"nand id: %02x %02x %02x %02x",
 		this->id.data[0],this->id.data[1],this->id.data[2],this->id.data[3]);
 
 	return 0;

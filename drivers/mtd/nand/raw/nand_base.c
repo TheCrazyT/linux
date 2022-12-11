@@ -5019,6 +5019,8 @@ static int nand_detect(struct nand_chip *chip, struct nand_flash_dev *type)
 	/* Read manufacturer and device IDs */
 	maf_id = id_data[0];
 	dev_id = id_data[1];
+	pr_warn("nand id: %02x,%02x", maf_id, dev_id);
+	printk("unshortened nandid#1: %02x %02x %02x %02x %02x\n",id_data[0],id_data[1],id_data[2],id_data[3],id_data[4]);
 
 	/*
 	 * Try again to make sure, as some systems the bus-hold or other
