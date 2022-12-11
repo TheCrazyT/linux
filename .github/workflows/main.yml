@@ -49,6 +49,6 @@ jobs:
     - name: checksums
       run: find -type f -exec md5sum {} \; > /tmp/new_checkums.txt
     - name: deploy to rclone
-      run: rclone copy -c . pcloud:/build_images/raspberrypi-kernel_1.20221104-nand
+      run: rclone copy -l -c . pcloud:/build_images/raspberrypi-kernel_1.20221104-nand
     - name: update checksums
       run: rclone copy /tmp/new_checksums.txt pcloud:/build_images/raspberrypi-kernel_1.20221104-nand/checksums.txt && rclone copy /tmp/new_checksums.txt 'pcloud:/build_images/raspberrypi-kernel_1.20221104-nand/checksums_'$(date +%s)'.txt'
