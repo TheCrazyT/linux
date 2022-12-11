@@ -63,11 +63,12 @@ struct bcm2835_smi_nand_host {
 #define SMI_NAND_CLE_PIN 0x01
 #define SMI_NAND_ALE_PIN 0x02
 
-static inline void bcm2835_smi_nand_cmd_ctrl(struct mtd_info *mtd, int cmd,
+static inline void bcm2835_smi_nand_cmd_ctrl(struct nand_chip *chip, int cmd,
 					     unsigned int ctrl)
 {
 	uint32_t cmd32 = cmd;
 	uint32_t addr = ~(SMI_NAND_CLE_PIN | SMI_NAND_ALE_PIN);
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct bcm2835_smi_nand_host *host = dev_get_drvdata(mtd->dev.parent);
 	struct bcm2835_smi_instance *inst = host->smi_inst;
 
@@ -85,9 +86,10 @@ static inline void bcm2835_smi_nand_cmd_ctrl(struct mtd_info *mtd, int cmd,
 		bcm2835_smi_write_buf(inst, &cmd32, 1);
 }
 
-static inline uint8_t bcm2835_smi_nand_read_byte(struct mtd_info *mtd)
+static inline uint8_t bcm2835_smi_nand_read_byte(struct nand_chip *chip)
 {
 	uint8_t byte;
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct bcm2835_smi_nand_host *host = dev_get_drvdata(mtd->dev.parent);
 	struct bcm2835_smi_instance *inst = host->smi_inst;
 
@@ -95,27 +97,30 @@ static inline uint8_t bcm2835_smi_nand_read_byte(struct mtd_info *mtd)
 	return byte;
 }
 
-static inline void bcm2835_smi_nand_write_byte(struct mtd_info *mtd,
+static inline void bcm2835_smi_nand_write_byte(struct nand_chip *chip,
 					       uint8_t byte)
 {
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct bcm2835_smi_nand_host *host = dev_get_drvdata(mtd->dev.parent);
 	struct bcm2835_smi_instance *inst = host->smi_inst;
 
 	bcm2835_smi_write_buf(inst, &byte, 1);
 }
 
-static inline void bcm2835_smi_nand_write_buf(struct mtd_info *mtd,
+static inline void bcm2835_smi_nand_write_buf(struct nand_chip *chip,
 					      const uint8_t *buf, int len)
 {
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct bcm2835_smi_nand_host *host = dev_get_drvdata(mtd->dev.parent);
 	struct bcm2835_smi_instance *inst = host->smi_inst;
 
 	bcm2835_smi_write_buf(inst, buf, len);
 }
 
-static inline void bcm2835_smi_nand_read_buf(struct mtd_info *mtd,
+static inline void bcm2835_smi_nand_read_buf(struct nand_chip *chip,
 					     uint8_t *buf, int len)
 {
+	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct bcm2835_smi_nand_host *host = dev_get_drvdata(mtd->dev.parent);
 	struct bcm2835_smi_instance *inst = host->smi_inst;
 
@@ -135,10 +140,8 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	struct mtd_info *mtd;
 	struct device *dev = &pdev->dev;
 	struct device_node *node = dev->of_node, *smi_node;
-	struct mtd_part_parser_data ppdata;
 	struct smi_settings *smi_settings;
 	struct bcm2835_smi_instance *smi_inst;
-	int ret = -ENXIO;
 
 	if (!node) {
 		dev_err(dev, "No device tree node supplied!");
@@ -192,28 +195,38 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	mtd->name = DRIVER_NAME;
 
 	/* 20 us command delay time... */
-	this->chip_delay = 20;
+	this->legacy.chip_delay = 20;
 
 	this->priv = host;
-	this->cmd_ctrl = bcm2835_smi_nand_cmd_ctrl;
-	this->read_byte = bcm2835_smi_nand_read_byte;
-	this->write_byte = bcm2835_smi_nand_write_byte;
-	this->write_buf = bcm2835_smi_nand_write_buf;
-	this->read_buf = bcm2835_smi_nand_read_buf;
-
-	this->ecc.mode = NAND_ECC_SOFT;
+	this->legacy.cmd_ctrl = bcm2835_smi_nand_cmd_ctrl;
+	this->legacy.read_byte = bcm2835_smi_nand_read_byte;
+	this->legacy.write_byte = bcm2835_smi_nand_write_byte;
+	this->legacy.write_buf = bcm2835_smi_nand_write_buf;
+	this->legacy.read_buf = bcm2835_smi_nand_read_buf;
+	
+	this->ecc.engine_type = NAND_ECC_ENGINE_TYPE_SOFT;
+	this->ecc.algo = NAND_ECC_ALGO_BCH;
 
 	/* Should never be accessed directly: */
 
-	this->IO_ADDR_R = (void *)0xdeadbeef;
-	this->IO_ADDR_W = (void *)0xdeadbeef;
+	this->legacy.IO_ADDR_R = (void *)0xdeadbeef;
+	this->legacy.IO_ADDR_W = (void *)0xdeadbeef;
 
 	/* Scan to find the device and get the page size */
 
-	if (nand_scan(mtd, 1))
+	if (nand_scan(this, 1))
 		return -ENXIO;
 
-	nand_release(mtd);
+	if (host) {
+		struct nand_chip *chip = &host->nand_chip;
+		int ret;
+
+		ret = mtd_device_unregister(nand_to_mtd(chip));
+		WARN_ON(ret);
+		nand_cleanup(chip);
+		//bcm2835_smi_nand_disable(host);
+
+	}
 	return -EINVAL;
 }
 
@@ -221,7 +234,16 @@ static int bcm2835_smi_nand_remove(struct platform_device *pdev)
 {
 	struct bcm2835_smi_nand_host *host = platform_get_drvdata(pdev);
 
-	nand_release(&host->mtd);
+	if (host) {
+		struct nand_chip *chip = &host->nand_chip;
+		int ret;
+
+		ret = mtd_device_unregister(nand_to_mtd(chip));
+		WARN_ON(ret);
+		nand_cleanup(chip);
+		//bcm2835_smi_nand_disable(host);
+
+	}
 
 	return 0;
 }
