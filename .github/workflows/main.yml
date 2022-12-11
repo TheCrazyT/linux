@@ -1,5 +1,9 @@
 name: C/C++ CI
 
+concurrency: 
+  group: production
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ raspberrypi-kernel_1.20221104-nand ]
