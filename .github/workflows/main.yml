@@ -17,8 +17,6 @@ jobs:
     environment: RCLONE
     steps:
     - uses: actions/checkout@v2
-    - name: rsync version
-      run: rsync --version
     - name: rclone config
       env: 
         RCLONE_CONF_PCLOUD_B64: ${{ secrets.RCLONE_CONF_PCLOUD }}
@@ -27,7 +25,9 @@ jobs:
       run: curl https://rclone.org/install.sh | sudo bash
     - name: show rclone config
       run: echo q|rclone config && ls -lah ~/.config/rclone
-    - name: rclone mount
+    - name: rclone version
+      run: rclone --version
+   - name: rclone mount
       run: whoami && DEFAULT_USER=$(whoami) && sudo mkdir /rclone_mnt && sudo chown -R $DEFAULT_USER:users /rclone_mnt && rclone mount -vv --daemon "pcloud:/"  /rclone_mnt
     - name: init
       run: sudo apt-get update && sudo apt-get install gcc-9-arm-linux-gnueabihf gcc-arm-linux-gnueabihf lib32z1 lib32ncurses6 lib32stdc++6 lib32z1 lib32z1-dev
@@ -43,13 +43,16 @@ jobs:
       run: export CURPWD=$PWD && cd drivers/mtd/nand && make -j 2 ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- -C $CURPWD M=$PWD clean && ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- make -j 2 KBUILD_EXTRA_SYMBOLS='${CURPWD}/Module.symvers' -C $CURPWD M=$PWD modules
     - name: find ko
       run: find -name "*.ko"
-    - name: checksums
-      run: find -type f -exec md5sum {} \; > /tmp/new_checkums.txt
-    - name: deploy to rclone
-      run: rsync -r -l -c . /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand
-    - name: update checksums
-      run: cp /tmp/new_checksums.txt /rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand/checksums.txt && cp /tmp/new_checksums.txt '/rclone_mnt/build_images/raspberrypi-kernel_1.20221104-nand/checksums_'$(date +%s)'.txt'
     - uses: actions/upload-artifact@v2
       with:
         name: my-artifact
-        path: drivers/**/*.ko
+        path: |
+          vmlinux
+          drivers/**/*.ko
+    - name: checksums
+      run: find -type f -exec md5sum {} \; > /tmp/new_checkums.txt
+    - name: deploy to rclone
+      run: rclone copy . pcloud:/build_images/raspberrypi-kernel_1.20221104-nand
+    - name: update checksums
+      run: rclone copy /tmp/new_checksums.txt pcloud:/build_images/raspberrypi-kernel_1.20221104-nand/checksums.txt && rclone copy /tmp/new_checksums.txt 'pcloud:/build_images/raspberrypi-kernel_1.20221104-nand/checksums_'$(date +%s)'.txt'
+
