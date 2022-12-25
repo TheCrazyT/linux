@@ -58,7 +58,7 @@ struct bcm2835_smi_controller {
 struct bcm2835_smi_nand_host {
 	struct bcm2835_smi_instance *smi_inst;
 	struct nand_chip nand_chip;
-	struct mtd_info mtd;
+	struct mtd_info *mtd;
 	struct device *dev;
 };
 struct bcm2835_smi_controller smic;
@@ -226,7 +226,8 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 
 	this = &host->nand_chip;
 	
-	mtd = &host->mtd;
+	host->mtd = nand_to_mtd(this);
+	mtd = host->mtd;
 	mtd->priv = this;
 	mtd->owner = THIS_MODULE;
 	mtd->dev.parent = dev;
@@ -258,12 +259,11 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	dev_warn(dev,"additional prechecks #1");
 	dev_warn(dev,"mtd before: %p",mtd);
 	//additional prechecks
-	/*mtd = nand_to_mtd(this);
 	dev_warn(dev,"mtd after: %p",mtd);
 	if(!mtd) {
 		dev_err(dev, "nand_to_mtd failed!");
 		return -EINVAL;
-	}*/
+	}
 	dev_warn(dev,"additional prechecks #2");
 	if(!mtd->dev.parent){
 		dev_err(dev, "mtd->dev.parent failed! #2");
