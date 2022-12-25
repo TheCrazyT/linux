@@ -4987,7 +4987,7 @@ static int nand_detect(struct nand_chip *chip, struct nand_flash_dev *type)
 	const struct nand_manufacturer_desc *manufacturer_desc;
 	struct mtd_info *mtd = nand_to_mtd(chip);
 	struct nand_memory_organization *memorg;
-	int busw, ret;
+	int busw, ret, n;
 	u8 *id_data = chip->id.data;
 	u8 maf_id, dev_id;
 	u64 targetsize;
@@ -5020,7 +5020,10 @@ static int nand_detect(struct nand_chip *chip, struct nand_flash_dev *type)
 	maf_id = id_data[0];
 	dev_id = id_data[1];
 	pr_warn("nand id: %02x,%02x", maf_id, dev_id);
-	printk("unshortened nandid#1: %02x %02x %02x %02x %02x\n",id_data[0],id_data[1],id_data[2],id_data[3],id_data[4]);
+	printk("unshortened nandid#1: ");
+	for(n=0;n<NAND_MAX_ID_LEN;n++)
+		printk("%02x ",id_data[n]);
+	printk("\n");
 
 	/*
 	 * Try again to make sure, as some systems the bus-hold or other
@@ -5034,6 +5037,10 @@ static int nand_detect(struct nand_chip *chip, struct nand_flash_dev *type)
 	if (ret)
 		return ret;
 
+	printk("unshortened nandid#2: ");
+	for(n=0;n<NAND_MAX_ID_LEN;n++)
+		printk("%02x ",id_data[n]);
+	printk("\n");
 	if (id_data[0] != maf_id || id_data[1] != dev_id) {
 		pr_info("second ID read did not match %02x,%02x against %02x,%02x\n",
 			maf_id, dev_id, id_data[0], id_data[1]);

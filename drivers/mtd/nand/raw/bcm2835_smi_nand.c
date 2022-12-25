@@ -204,6 +204,8 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	smi_settings->write_hold_time = 16;
 	smi_settings->write_pace_time = 16;
 	smi_settings->write_strobe_time = 11;
+	smi_settings->pack_data = false;
+
 
 	dev_warn(dev,"before bcm2835_smi_set_regs_from_settings");
 	bcm2835_smi_set_regs_from_settings(smi_inst);
@@ -292,6 +294,12 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 
 	dev_warn(dev,"nand id: %02x %02x %02x %02x",
 		this->id.data[0],this->id.data[1],this->id.data[2],this->id.data[3]);
+		
+	mtd->_block_isbad  = NULL;
+	mtd->_block_markbad  = NULL;
+	mtd->writesize = 512;
+	mtd->flags = MTD_NO_ERASE;
+	mtd_device_register(mtd, NULL, 0);
 
 	return 0;
 }
