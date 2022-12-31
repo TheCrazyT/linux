@@ -47,6 +47,38 @@
 #define DEVICE_NAME "bcm2835-smi-nand"
 #define DRIVER_NAME "smi-nand-bcm2835"
 
+short data_width = SMI_WIDTH_8BIT;
+short read_setup_time = 31;
+short read_hold_time = 37;
+short read_pace_time = 47;
+short read_strobe_time = 67;
+
+short write_setup_time = 31;
+short write_hold_time = 19;
+short write_pace_time = 23;
+short write_strobe_time = 11;
+
+module_param(data_width, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(data_width, "0=8bit,1=16bit");
+
+module_param(read_setup_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(read_setup_time, "read setup time");
+module_param(read_hold_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(read_hold_time, "read hold time");
+module_param(read_pace_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(read_pace_time, "read pace time");
+module_param(read_strobe_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(read_strobe_time, "read strobe time");
+
+module_param(write_setup_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(write_setup_time, "write setup time");
+module_param(write_hold_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(write_hold_time, "write hold time");
+module_param(write_pace_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(write_pace_time, "write pace time");
+module_param(write_strobe_time, short, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+MODULE_PARM_DESC(write_strobe_time, "write strobe time");
+
 struct bcm2835_smi_controller {
 	struct platform_device *ofdev;
 	void __iomem *base;
@@ -194,16 +226,16 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 	pr_warn("before bcm2835_smi_get_settings_from_regs");
 	smi_settings = bcm2835_smi_get_settings_from_regs(smi_inst);
 
-	smi_settings->data_width = SMI_WIDTH_8BIT;
-	smi_settings->read_setup_time = 32;
-	smi_settings->read_hold_time = 32;
-	smi_settings->read_pace_time = 64;
-	smi_settings->read_strobe_time = 64;
+	smi_settings->data_width = data_width;
+	smi_settings->read_setup_time = read_setup_time;
+	smi_settings->read_hold_time = read_hold_time;
+	smi_settings->read_pace_time = read_pace_time;
+	smi_settings->read_strobe_time = read_strobe_time;
 
-	smi_settings->write_setup_time = 32;
-	smi_settings->write_hold_time = 16;
-	smi_settings->write_pace_time = 16;
-	smi_settings->write_strobe_time = 11;
+	smi_settings->write_setup_time = write_setup_time;
+	smi_settings->write_hold_time = write_hold_time;
+	smi_settings->write_pace_time = write_pace_time;
+	smi_settings->write_strobe_time = write_strobe_time;
 	smi_settings->pack_data = false;
 
 
@@ -238,8 +270,8 @@ static int bcm2835_smi_nand_probe(struct platform_device *pdev)
 		return -EINVAL;
 	}
 	
-	/* 20 us command delay time... */
-	this->legacy.chip_delay = 40;
+	/* 80 us command delay time... */
+	this->legacy.chip_delay = 80;
 
 	this->priv = host;
 	this->legacy.cmd_ctrl = bcm2835_smi_nand_cmd_ctrl;
